@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wheel of Multiplication</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%);
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #settings {
+      margin-bottom: 20px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: inline-block;
+    }
+
+    select {
+      font-size: 18px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid #7EC8E3;
+      background: #E0F7FA;
+      color: #00796B;
+      cursor: pointer;
+      width: 150px;
+    }
+
+    button {
+      font-size: 20px;
+      padding: 10px 25px;
+      border: none;
+      border-radius: 12px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+      margin-right: 10px;
+      box-shadow: 0 5px #3e8e41;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    #probbox {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      font-size: 28px;
+      color: #2E86AB;
+      max-width: 220px;
+      z-index: 1000;
+      text-align: left;
+    }
+
+    #topbox h2 {
+      font-size: 28px;
+      margin: 10px 0;
+    }
+
+    #scorebox {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: rgba(52, 73, 94, 0.8);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 12px;
+      font-size: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+
+    #answerbox {
+      margin-top: 60px;
+    }
+
+    #answerbox input {
+      font-size: 28px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 3px solid #3498DB;
+      width: 180px;
+      text-align: center;
+      outline: none;
+    }
+
+    #answerbox input:disabled {
+      background: #ddd;
+      border-color: #bbb;
+    }
+
+    #questionNumber {
+      margin-top: 12px;
+      font-size: 20px;
+      color: #555;
+    }
+
+    /* Wheel Styles */
+    #wheel-container {
+      margin: 30px auto;
+      width: 150px;
+      height: 150px;
+      border: 12px solid #3498DB;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 0 20px #3498DBAA;
+    }
+
+    #wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(
+        #4CAF50 0% 12.5%, #81C784 12.5% 25%, #AED581 25% 37.5%, #DCE775 37.5% 50%,
+        #FFEB3B 50% 62.5%, #FFD54F 62.5% 75%, #FFB74D 75% 87.5%, #FF8A65 87.5% 100%
+      );
+      animation: spin 10s linear infinite;
+      transform-origin: center center;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg);}
+      to { transform: rotate(360deg);}
+    }
+  </style>
+</head>
+<body>
+  <h1 style="font-size: 3em; color: #2E86AB; margin-bottom: 10px;">Made by Caleb</h1>
+
+  <div id="settings">
+    <label>Select Times Tables (hold Ctrl or Cmd to select multiple):</label><br>
+    <select id="timesTables" multiple size="12">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+    </select><br><br>
+    <button id="startTest">Start Test</button>
+    <button id="fullscreenBtn">Fullscreen</button>
+  </div>
+
+  <div id="topbox"></div>
+  <div id="scorebox"></div>
+  <div id="probbox"></div>
+  <div id="answerbox">
+    <input id="answertext" type="text" placeholder="Type your answer and press Enter" disabled>
+    <div id="questionNumber"></div>
+  </div>
+
+  <div id="wheel-container">
+    <div id="wheel"></div>
+  </div>
+
+  <script>
+    let term1 = 0;
+    let term2 = 0;
+    let score = 0;
+    let numTries = 0;
+    const totalQuestions = 10;
+    let selectedTables = [];
+
+    const wheel = document.getElementById("wheel");
+    let baseSpinDuration = 10; // seconds
+    let minSpinDuration = 2;
+
+    function getRandomFromArray(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function newProblem() {
+      if (numTries >= totalQuestions) {
+        document.getElementById("topbox").innerHTML = `<h2>🎉 Test Complete! 🎉</h2>`;
+        document.getElementById("probbox").innerHTML = "";
+        document.getElementById("answertext").disabled = true;
+        document.getElementById("scorebox").innerHTML = `<h3>Your final score: ${score} / ${totalQuestions}</h3>`;
+        document.getElementById("questionNumber").innerText = "";
+        wheel.style.animationDuration = baseSpinDuration + "s"; // Reset speed
+        return;
+      }
+
+      term1 = getRandomFromArray(selectedTables);
+      term2 = Math.floor(Math.random() * 13);
+      document.getElementById("probbox").innerHTML = `<h2>${term1} × ${term2} = ?</h2>`;
+      document.getElementById("answertext").value = "";
+      document.getElementById("topbox").innerHTML = "";
+
+      document.getElementById("questionNumber").innerText = `Question ${numTries + 1} of ${totalQuestions}`;
+    }
+
+    function updateScore() {
+      document.getElementById("scorebox").innerHTML =
+        `<h3>Score: ${score} / ${numTries}</h3>`;
+
+      let speed = baseSpinDuration - (score * (baseSpinDuration - minSpinDuration) / totalQuestions);
+      if (speed < minSpinDuration) speed = minSpinDuration;
+      wheel.style.animationDuration = speed + "s";
+    }
+
+    function checkAnswer(ev) {
+      if (ev.key === "Enter") {
+        const answer = parseInt(ev.target.value);
+        if (isNaN(answer)) {
+          alert("Please enter a number!");
+          return;
+        }
+        numTries++;
+        if (answer === term1 * term2) {
+          score++;
+          document.getElementById("topbox").innerHTML = `<h2 style="color: green">✔ Correct!</h2>`;
+        } else {
+          document.getElementById("topbox").innerHTML = `<h2 style="color: red">✘ Wrong! The correct answer was ${term1 * term2}</h2>`;
+        }
+        updateScore();
+        setTimeout(newProblem, 1000);
+      }
+    }
+
+    document.getElementById("startTest").addEventListener("click", () => {
+      const select = document.getElementById("timesTables");
+      selectedTables = Array.from(select.selectedOptions).map(opt => parseInt(opt.value));
+
+      if (selectedTables.length === 0) {
+        alert("Please select at least one times table to practice!");
+        return;
+      }
+
+      score = 0;
+      numTries = 0;
+      document.getElementById("answertext").disabled = false;
+      updateScore();
+      newProblem();
+    });
+
+    document.getElementById("answertext").addEventListener("keydown", checkAnswer);
+
+    document.getElementById("answertext").disabled = true;
+
+    document.getElementById("fullscreenBtn").addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
